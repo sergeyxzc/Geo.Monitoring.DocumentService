@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Geo.Monitoring.DocumentService.Application;
 
-public record UploadDocumentRequest(string ContentType, string? Name, string? ExternalId, string? Description, Stream ContentStream);
+public record UploadDocumentRequest(string ContentType, string? Name, string? Description, string[]? Labels, Stream ContentStream);
 public record UploadDocumentResponse(int DocumentId);
 
-public record FindRequest(int? DocumentId = null, string? ExternalId = null);
-
-public record FindDocumentResponse(int DocumentId, string? ExternalId, string? Name, string? ContentType, string? Description);
+public record FindRequest(string Label);
+public record FindResponse(DocumentResponse[] Documents);
+public record DocumentResponse(int DocumentId, string ContentType, string? Name, string? Description);
 
 public record DownloadDocumentResponse(string? Name, string ContentType, byte[] Content);
 
@@ -26,15 +26,11 @@ public class GeoDocumentService
     {
         var trans = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        var isExternalIdExist = await _dbContext.Documents.AnyAsync(x => x.ExternalId == request.ExternalId, cancellationToken);
-        if (isExternalIdExist)
-            throw new ArgumentException("ExternalId is already exists");
-
         using var memStream = new MemoryStream(64 * 1024);
         await request.ContentStream.CopyToAsync(memStream, cancellationToken);
         await memStream.FlushAsync(cancellationToken);
 
-        var document = Document.Create(request.ContentType, request.ExternalId, request.Name, request.Description, memStream.ToArray());
+        var document = Document.Create(request.ContentType, request.Name, request.Description, request.Labels, memStream.ToArray());
 
         _dbContext.Documents.Add(document);
 
@@ -44,44 +40,38 @@ public class GeoDocumentService
         return new UploadDocumentResponse(document.Id);
     }
 
-    public async Task<FindDocumentResponse> FindAsync(FindRequest request, CancellationToken cancellationToken)
+    public async Task<DocumentResponse> GetDocumentAsync(int documentId, CancellationToken cancellationToken)
     {
-        var query = _dbContext.Documents.AsNoTracking();
-
-        Document? document = null;
-
-        if (request.DocumentId.HasValue)
-        {
-            document = await query
-                .Where(x => x.Id == request.DocumentId.Value)
-                .Select(x => new Document()
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    ContentType = x.ContentType,
-                    Description = x.Description,
-                    ExternalId = x.ExternalId
-                }).SingleOrDefaultAsync(cancellationToken);
-        }
-
-        if (document == null && !string.IsNullOrEmpty(request.ExternalId))
-        {
-            document = await query
-                .Where(x => x.ExternalId == request.ExternalId)
-                .Select(x => new Document()
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    ContentType = x.ContentType,
-                    Description = x.Description,
-                    ExternalId = x.ExternalId
-                }).SingleOrDefaultAsync(cancellationToken);
-        }
+        var document = await _dbContext.Documents
+            .Where(x => x.Id == documentId)
+            .Select(x => new Document()
+            {
+                Id = x.Id,
+                Name = x.Name,
+                ContentType = x.ContentType,
+                Description = x.Description,
+            }).SingleOrDefaultAsync(cancellationToken);
 
         if (document == null)
-            return null;
+            throw new DocumentException($"Document with id {documentId} not found");
 
-        return new FindDocumentResponse(document.Id, document.ExternalId, document.Name, document.ContentType, document.Description);
+        return new DocumentResponse(document.Id, document.ContentType, document.Name, document.Description);
+    }
+
+    public async Task<FindResponse> FindAsync(FindRequest request, CancellationToken cancellationToken)
+    {
+        var documents = await _dbContext.Labels
+            .Where(x => x.Label == request.Label)
+            .Select(x => x.Document)
+            .Select(x => new Document()
+            {
+                Id = x.Id,
+                Name = x.Name,
+                ContentType = x.ContentType,
+                Description = x.Description,
+            }).ToListAsync(cancellationToken);
+
+        return new FindResponse(documents.Select(x => new DocumentResponse(x.Id, x.ContentType, x.Name, x.Description)).ToArray());
     }
 
     public async Task<DownloadDocumentResponse> DownloadAsync(int documentId, CancellationToken cancellationToken)
@@ -93,5 +83,13 @@ public class GeoDocumentService
             return null;
 
         return new DownloadDocumentResponse(document.Name, document.ContentType, document.Content);
+    }
+
+    public async Task DeleteAsync(int documentId, CancellationToken cancellationToken)
+    {
+        var document = new Document() { Id = documentId };
+        _dbContext.Documents.Attach(document);
+        _dbContext.Documents.Remove(document);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

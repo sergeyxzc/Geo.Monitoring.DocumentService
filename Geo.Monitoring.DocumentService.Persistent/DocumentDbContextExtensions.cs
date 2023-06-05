@@ -15,8 +15,10 @@ public static class DocumentDbContextExtensions
                     //opt.MigrationsHistoryTable(DocumentDbContext.MigrationTableName, DocumentDbContext.DbSchema);
                     opt.CommandTimeout(options.CommandTimeoutSecond);
                 })
-                .EnableSensitiveDataLogging()
+                //.EnableSensitiveDataLogging()
                 .EnableDetailedErrors();
         });
+
+        service.AddScoped<DocumentDatabaseMigration>();
     }
 }

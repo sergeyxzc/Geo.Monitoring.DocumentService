@@ -35,18 +35,51 @@ namespace Geo.Monitoring.DocumentService.Persistent.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ExternalId")
-                        .HasMaxLength(255)
-                        .HasColumnType("VARCHAR");
-
                     b.Property<string>("Name")
                         .HasColumnType("TINYTEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ExternalId");
-
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("Geo.Monitoring.DocumentService.Domain.DocumentLabel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("VARCHAR");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("Label");
+
+                    b.ToTable("Labels");
+                });
+
+            modelBuilder.Entity("Geo.Monitoring.DocumentService.Domain.DocumentLabel", b =>
+                {
+                    b.HasOne("Geo.Monitoring.DocumentService.Domain.Document", "Document")
+                        .WithMany("Labels")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+                });
+
+            modelBuilder.Entity("Geo.Monitoring.DocumentService.Domain.Document", b =>
+                {
+                    b.Navigation("Labels");
                 });
 #pragma warning restore 612, 618
         }
