@@ -49,7 +49,6 @@ public static class AuthExtensions
             In = ParameterLocation.Header
         };
 
-
         var requirement = new OpenApiSecurityRequirement
         {
             {
