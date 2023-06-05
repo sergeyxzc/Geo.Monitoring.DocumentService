@@ -4,9 +4,9 @@
 docker network create mysqlnet
 
 ## 2. Run mySql server
-docker run -p 3306:3306 --network mysqlnet --name geodbtest -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=geotest -e MYSQL_USER=geotest -e MYSQL_PASSWORD=geotest -d mysql:latest
+docker run -p 3306:3306 --network mysqlnet --name geodbtest -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=geotest -e MYSQL_USER=geotest -e MYSQL_PASSWORD=geotest -d mysql:8.0.33
 
-## 3. Убедитесь что контенер запущен
+## 3. Убедитесь что контеёнер запущен
 docker container ls
 
 ## 4.1. Run mySql admin tool
