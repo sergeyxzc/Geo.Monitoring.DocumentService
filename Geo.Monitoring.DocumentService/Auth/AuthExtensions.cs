@@ -34,7 +34,7 @@ public static class AuthExtensions
         {
             Description = "ApiKey must appear in header",
             Type = SecuritySchemeType.ApiKey,
-            Name = "X-Geo-ApiKey",
+            Name = "X-GeoDoc-ApiKey",
             In = ParameterLocation.Header,
             Scheme = "ApiKeyScheme"
         });

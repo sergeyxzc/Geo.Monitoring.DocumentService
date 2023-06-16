@@ -18,6 +18,6 @@ public class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
         set => base.Events = value;
     }
 
-    public string ApiKeyHeaderName => "X-Geo-ApiKey";
+    public string ApiKeyHeaderName => "X-GeoDoc-ApiKey";
     public Type? ApiKeyValidationServiceType { get; set; }
 }
