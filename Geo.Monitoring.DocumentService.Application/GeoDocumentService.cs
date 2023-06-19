@@ -1,6 +1,9 @@
-﻿using Geo.Monitoring.DocumentService.Domain;
+﻿using System.Data;
+using System.Threading;
+using Geo.Monitoring.DocumentService.Domain;
 using Geo.Monitoring.DocumentService.Persistent;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Geo.Monitoring.DocumentService.Application;
 
@@ -24,7 +27,7 @@ public class GeoDocumentService
 
     public async Task<UploadDocumentResponse> UploadAsync(UploadDocumentRequest request, CancellationToken cancellationToken)
     {
-        var trans = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var trans = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
 
         using var memStream = new MemoryStream(64 * 1024);
         await request.ContentStream.CopyToAsync(memStream, cancellationToken);
