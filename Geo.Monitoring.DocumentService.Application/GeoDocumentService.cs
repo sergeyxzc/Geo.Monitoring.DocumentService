@@ -27,6 +27,7 @@ public class GeoDocumentService
 
     public async Task<UploadDocumentResponse> UploadAsync(UploadDocumentRequest request, CancellationToken cancellationToken)
     {
+        //await Task.Delay(10000, cancellationToken);
         var trans = await _dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
 
         using var memStream = new MemoryStream(64 * 1024);

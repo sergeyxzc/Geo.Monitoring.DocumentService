@@ -37,10 +37,10 @@ public class DocumentController : ControllerBase
         return response;
     }
 
-    [HttpPost("find")]
-    public async Task<ActionResult<FindResponse>> FindDocumentAsync([FromBody] FindRequest request, CancellationToken cancellationToken)
+    [HttpGet("find")]
+    public async Task<ActionResult<FindResponse>> FindDocumentsAsync([FromQuery] string label, CancellationToken cancellationToken)
     {
-        var response = await _documentService.FindAsync(request, cancellationToken);
+        var response = await _documentService.FindAsync(new FindRequest(label), cancellationToken);
         return response;
     }
 
