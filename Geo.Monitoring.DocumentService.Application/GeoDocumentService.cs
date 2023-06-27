@@ -12,7 +12,7 @@ public record UploadDocumentResponse(int DocumentId);
 
 public record FindRequest(string Label);
 public record FindResponse(DocumentResponse[] Documents);
-public record DocumentResponse(int DocumentId, string ContentType, string? Name, string? Description);
+public record DocumentResponse(int DocumentId, string ContentType, int Size, string? Name, string? Description);
 
 public record DownloadDocumentResponse(string? Name, string ContentType, byte[] Content);
 
@@ -54,12 +54,13 @@ public class GeoDocumentService
                 Name = x.Name,
                 ContentType = x.ContentType,
                 Description = x.Description,
+                Size = x.Size
             }).SingleOrDefaultAsync(cancellationToken);
 
         if (document == null)
             throw new DocumentException($"Document with id {documentId} not found");
 
-        return new DocumentResponse(document.Id, document.ContentType, document.Name, document.Description);
+        return new DocumentResponse(document.Id, document.ContentType, document.Size, document.Name, document.Description);
     }
 
     public async Task<FindResponse> FindAsync(FindRequest request, CancellationToken cancellationToken)
@@ -73,9 +74,10 @@ public class GeoDocumentService
                 Name = x.Name,
                 ContentType = x.ContentType,
                 Description = x.Description,
+                Size = x.Size
             }).ToListAsync(cancellationToken);
 
-        return new FindResponse(documents.Select(x => new DocumentResponse(x.Id, x.ContentType, x.Name, x.Description)).ToArray());
+        return new FindResponse(documents.Select(x => new DocumentResponse(x.Id, x.ContentType, x.Size, x.Name, x.Description)).ToArray());
     }
 
     public async Task<DownloadDocumentResponse> DownloadAsync(int documentId, CancellationToken cancellationToken)

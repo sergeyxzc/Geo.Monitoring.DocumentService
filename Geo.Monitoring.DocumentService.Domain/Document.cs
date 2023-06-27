@@ -9,6 +9,7 @@ public class Document
             Name = name,
             ContentType = contentType,
             Description = description,
+            Size = content.Length,
             Content = content,
             Labels = labels?.Select(x => new DocumentLabel()
             {
@@ -20,6 +21,7 @@ public class Document
     public int Id { get; set; }
 
     public string ContentType { get; set; } = default!;
+    public int Size { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
     public byte[] Content { get; set; } = default!;
